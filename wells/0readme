@@ -1,0 +1,45 @@
+Etter diskusjonar og intern testing må eg gå i meg sjølv og sende ein korrigert versjon av scriptet wells_copy_branched.  Eg trudde eg var smart og skulle kunne bruke informasjon om greinpunkt frå branch-info-fila, som omtalt i det røde avsnittet under.   Det går av ulike grunnar ikkje - og sidegreina kan flytte seg under kopieringa, dersom ho er definert med (MD,Inc,Az).  Dette fordi ei slik brønnbane er kritisk avhengig av posisjon til første punktet - alle andre punkt blir jo rekna ut relativt til det første punktet.
+
+Eg er nødt å sende ein ny versjon, der eg alltid definerer greinpunktet ut frå brønnbane-geometri.  
+
+Ein må også vere forsiktig med å ikkje ha for stor toleranse for testen av likhet mellom to punkt  - eit stort avik mellom punkt på dei to greinene kan også føre til at sidegreina blir flytta.  
+
+Lei for rotet, men dette har vore ein vanskeleg læreprosess for underteikna...
+
+Tor
+
+
+Hei Roger,
+
+Eg har no oppdatert script for å kopiere greinbrønner.  
+Endringane her er vesentlege, så du må sjekke resultatet grundig! Eg skal beskrve endringane i det følgjande.  
+Du får vedlagt to oppdaterte filer:
+
+wells_copy_branched.py:  Dette er scriptet du køyrer.  
+
+
+
+wellcopy.py:  
+Dette er ei ny utgåve av ei fil inne i biblioteket roxar_api_utils, i folderen wells.  
+Du må erstatte eksisterande bibliotek-fil med denne.  
+Eg håper det går greit utan å sende heile biblioteket på nytt.
+
+Endringane gjeld måten som scriptet bruker til å finne greinpunktet ('tie in point')  mellom to greiner:
+
+Ei brønnbane i RMS og API-en er generelt definert med seks koordinatar: (MD, Inc(linitation), Az(imuth), East, North, TVD). 
+Sidan vi lever i eit tre-dimensjonalt rom, er bare tre av desse 'fri' - dei tre andre vil vere implisitt bestemt av dei tre første.  
+Kva for koordinatar som er fri og kva som blir bestemt av dei andre er styrt av 'calculation type'  definert for brønnbana.  
+Typisk vil 'calculation type' vere (MD, Inc, Az) eller (East, North, TVD).  
+Tidlegare utgåve av scriptet testa to og to brønnbane-punkt, om alle seks koordinatane var identiske.  
+Det viste seg imidlertid at dei tre koordinatane som blir bestemt av dei andre ofte er påvirka av numerisk støy, slik at to brønnbaner kan ha ulike verdiar for desse, 
+sjølv om dei tre 'frie' koordinatane ser ut til å vere identiske.  
+Scriptet testar no berre dei tre frie koordinatane og ikkje alle seks koordinatar.
+
+Scriptet tillat brukaren no å sette toleransar for å teste likhet mellom to punkt.  Ein må sette seks verdiar, ein verdi for kvar av koordinatane (MD,Inc,Az,East,North,TVD).  Men merk igjen at berre tre av desse blir brukt for ei bestemt brønnbane, avhengig av 'calculation type'.   Sjekken er absolutt - og ikkje relativ - dvs at scriptet sjekker differansen (p1 - p2) < toleranse.  Det vil seie at toleranse-verdien for MD er i meter osv.   
+
+Scriptet vil no bruke informasjon om greinpunktet, satt i 'branch info-fila'.   La oss seie at scriptet først finn greinpunktet til å vere MD=1000 m, basert på brønnpunkt-geometrien ("geometri-punktet").  Anta at info-fila definerer greinpunktet til å vere MD=1010 meter, dvs under det geometri-punktet som alt er funne.   Dersom neste målte brønnpunkt (på begge greiner) ligg under dette punktet (1010) igjen, så definerest greinpunktet til å vere verdien frå info-fila.  Dette kan illustrerast med den venstre figuren i den vedlagte siden.  Dersom greinpunktet frå info-fila ikkje ligg mellom geometri-punktet og neste punkt, så brukest geometri-verdien, og det skrivest ein advarsel.  Dette vil vere tilfelle i det høgre eksempelet i sliden.   Dersom greinpunktet frå info-fila ligg over geometri-punktet, så blir verdien i info-fila ignorert, og geometri-punktet blir brukt.
+
+Håper dette var rimeleg forståeleg - og at scriptet virker som det skal! Eg rekner med at de sender eit ord dersom noko er uklart eller om noko ikkje fungerer...
+
+Tor
+
