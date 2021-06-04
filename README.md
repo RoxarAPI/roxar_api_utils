@@ -1,6 +1,4 @@
-=====================
-Roxar API Utilities
-=====================
+# Roxar API Utilities
 
 The Roxar API Utilities repository contains libraries for common utility
 functions that can be used to supplement the Roxar API.
