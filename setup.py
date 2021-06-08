@@ -20,6 +20,6 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    packages=["roxar_api_utils"],
+    packages=["roxar_api_utils.wells"],
     python_requires=">=3.7",
 )
