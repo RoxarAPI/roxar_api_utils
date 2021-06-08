@@ -21,7 +21,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     packages=[
-        "roxar_api_utils.evrnts",
+        "roxar_api_utils.events",
         "roxar_api_utils.flow",
         "roxar_api_utils.ioutil",
         "roxar_api_utils.profiles",
