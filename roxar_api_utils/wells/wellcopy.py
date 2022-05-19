@@ -3,18 +3,21 @@ import numpy as np
 import roxar
 import roxar.wells
 
-def copy_well(dst_well, src_well):
+
+def copy_well(dst_well, src_well, copy_logs=True):
     """Copy RMS well
     Args:
         dst_well (RMS well): Destination well
         src_well (RMS well): Source well
+        copy_logs (bool): copy log runs, True or False
     """
     dst_well.wellhead = src_well.wellhead
     dst_well.rkb = src_well.rkb
-    copy_trajectories(dst_well.wellbore, src_well.wellbore)
+    copy_trajectories(dst_well.wellbore, src_well.wellbore, copy_logs=copy_logs)
     copy_wellbores(dst_well.wellbore, src_well.wellbore)
 
     return None
+
 
 def copy_wellbores(dst_wellbore, src_wellbore):
     """Copy RMS wellbore
@@ -28,6 +31,7 @@ def copy_wellbores(dst_wellbore, src_wellbore):
         copy_wellbores(dst_wellbore2, src_wellbore2)
 
     return None
+
 
 def copy_log_curves(dst_log_run, src_log_run):
     """Copy RMS log run
@@ -47,12 +51,13 @@ def copy_log_curves(dst_log_run, src_log_run):
                     dst_log_curve.set_code_names(code_names)
                 except ValueError as e:
                     errmes = (
-                        'Copy log curves failed: '
-                        +  src_log_curve.name
-                        + ' Wellbore: '
+                        "Copy log curves failed: "
+                        + src_log_curve.name
+                        + " Wellbore: "
                         + src_log_run.trajectory.wellbore.name
-                        + ' Reason: '
-                        + e)
+                        + " Reason: "
+                        + e
+                    )
                     raise ValueError(errmes)
         else:
             dst_log_curve = dst_log_run.log_curves.create(name)
@@ -61,16 +66,18 @@ def copy_log_curves(dst_log_run, src_log_run):
             dst_log_curve.set_values(values)
         except ValueError as e:
             errmes = (
-                'Copy log curves failed: '
-                +  src_log_curve.name
-                + ' Wellbore: '
+                "Copy log curves failed: "
+                + src_log_curve.name
+                + " Wellbore: "
                 + src_log_run.trajectory.wellbore.name
-                + ' Reason: '
-                + e)
+                + " Reason: "
+                + e
+            )
         if len(dst_log_curve.get_values()) != len(src_log_curve.get_values()):
             dst_log_curve.set_values(values)
 
     return None
+
 
 def copy_log_runs(dst_traj, src_traj):
     """Copy RMS log runs
@@ -86,18 +93,22 @@ def copy_log_runs(dst_traj, src_traj):
             dst_log_run.set_measured_depths(measured_depths)
         except ValueError as e:
             errmes = (
-                'Copy log runs failed. Run: '
-                +  src_log_run.name
-                + ' Wellbore: '
+                "Copy log runs failed. Run: "
+                + src_log_run.name
+                + " Wellbore: "
                 + src_log_run.trajectory.wellbore.name
-                + ' Reason: '
-                + e)
+                + " Reason: "
+                + e
+            )
             raise ValueError(errmes)
         copy_log_curves(dst_log_run, src_log_run)
 
     return None
 
-def copy_trajectories(dst_wellbore, src_wellbore, dst_parent_traj=None, md_min=None):
+
+def copy_trajectories(
+    dst_wellbore, src_wellbore, dst_parent_traj=None, md_min=None, copy_logs=True
+):
     """Copy RMS trajectories
     Args:
         dst_wellbore (RMS wellbore): Destination wellbore
@@ -117,30 +128,38 @@ def copy_trajectories(dst_wellbore, src_wellbore, dst_parent_traj=None, md_min=N
             else:
                 dst_parent_traj = None
                 if src_wellbore.parent_wellbore is None:
-                    print('Copy trajectory: Parent source wellbore is None. ProjectAhead?',
-                          'traj:',
-                          src_traj.name,
-                          'well:',
-                          src_wellbore.name)
+                    print(
+                        "Copy trajectory: Parent source wellbore is None. ProjectAhead?",
+                        "traj:",
+                        src_traj.name,
+                        "well:",
+                        src_wellbore.name,
+                    )
                     continue
                 try:
-                    dst_parent_wellbore = (
-                        dst_wellbore.well.all_wellbores[src_wellbore.parent_wellbore.name])
-                    dst_parent_traj = (
-                        dst_parent_wellbore.trajectories[src_traj.parent_trajectory.name])
+                    dst_parent_wellbore = dst_wellbore.well.all_wellbores[
+                        src_wellbore.parent_wellbore.name
+                    ]
+                    dst_parent_traj = dst_parent_wellbore.trajectories[
+                        src_traj.parent_trajectory.name
+                    ]
                 except KeyError as e:
                     errmes = (
-                        'Copy trajectory failed: '
+                        "Copy trajectory failed: "
                         + src_traj.name
-                        + ' Wellbore: '
-                        + src_wellbore.name)
+                        + " Wellbore: "
+                        + src_wellbore.name
+                    )
                     raise KeyError(errmes)
 
-                dst_traj = dst_wellbore.trajectories.create_sidetrack(name, dst_parent_traj)
+                dst_traj = dst_wellbore.trajectories.create_sidetrack(
+                    name, dst_parent_traj
+                )
         else:
             dst_traj = dst_wellbore.trajectories.create_sidetrack(name, dst_parent_traj)
 
-        copy_log_runs(dst_traj, src_traj)
+        if copy_logs:
+            copy_log_runs(dst_traj, src_traj)
 
         points = None
         src_type = src_traj.survey_point_series.calculation_type
@@ -157,8 +176,8 @@ def copy_trajectories(dst_wellbore, src_wellbore, dst_parent_traj=None, md_min=N
         else:
             points = src_traj.survey_point_series.get_survey_points()
 
-# Filter trajectorie above tie-in point:
-        if src_type == roxar.SurveyPointCalculationType.survey_points:     # 6 arguments
+        # Filter trajectorie above tie-in point:
+        if src_type == roxar.SurveyPointCalculationType.survey_points:  # 6 arguments
             nlist = []
             if md_min is not None:
                 is_first = True
@@ -168,12 +187,16 @@ def copy_trajectories(dst_wellbore, src_wellbore, dst_parent_traj=None, md_min=N
                         is_first = False
                     elif p[0] > md_min:
                         if is_first:
-                            pfirst = src_traj.survey_point_series.interpolate_survey_point(md_min)
+                            pfirst = (
+                                src_traj.survey_point_series.interpolate_survey_point(
+                                    md_min
+                                )
+                            )
                             nlist.append(pfirst)
                             is_first = False
                         nlist.append(p)
                 points = np.array(nlist)
-        elif src_type == roxar.SurveyPointCalculationType.surveys:   # 3 arguments
+        elif src_type == roxar.SurveyPointCalculationType.surveys:  # 3 arguments
             nlist = []
             if md_min is not None:
                 is_first = True
@@ -183,7 +206,11 @@ def copy_trajectories(dst_wellbore, src_wellbore, dst_parent_traj=None, md_min=N
                         is_first = False
                     elif p[0] > md_min:
                         if is_first:
-                            pfirst = src_traj.survey_point_series.interpolate_survey_point(md_min)
+                            pfirst = (
+                                src_traj.survey_point_series.interpolate_survey_point(
+                                    md_min
+                                )
+                            )
                             p0 = np.array([pfirst[0], pfirst[1], pfirst[2]])
                             nlist.append(p0)
                             is_first = False
@@ -194,13 +221,17 @@ def copy_trajectories(dst_wellbore, src_wellbore, dst_parent_traj=None, md_min=N
             nlist = []
             if md_min is not None:
                 is_first = True
-                for i,sp in enumerate(spoints):
+                for i, sp in enumerate(spoints):
                     if sp[0] == md_min:
                         nlist.append(points[i])
                         is_first = False
                     elif sp[0] > md_min:
                         if is_first:
-                            pfirst = src_traj.survey_point_series.interpolate_survey_point(md_min)
+                            pfirst = (
+                                src_traj.survey_point_series.interpolate_survey_point(
+                                    md_min
+                                )
+                            )
                             p0 = np.array([pfirst[0], pfirst[3], pfirst[4], pfirst[5]])
                             nlist.append(p0)
                             is_first = False
@@ -211,13 +242,17 @@ def copy_trajectories(dst_wellbore, src_wellbore, dst_parent_traj=None, md_min=N
             nlist = []
             if md_min is not None:
                 is_first = True
-                for i,sp in enumerate(spoints):
+                for i, sp in enumerate(spoints):
                     if sp[0] == md_min:
                         nlist.append(points[i])
                         is_first = False
                     elif sp[0] > md_min:
                         if is_first:
-                            pfirst = src_traj.survey_point_series.interpolate_survey_point(md_min)
+                            pfirst = (
+                                src_traj.survey_point_series.interpolate_survey_point(
+                                    md_min
+                                )
+                            )
                             p0 = np.array([pfirst[3], pfirst[4], pfirst[5]])
                             nlist.append(p0)
                             is_first = False
@@ -226,10 +261,11 @@ def copy_trajectories(dst_wellbore, src_wellbore, dst_parent_traj=None, md_min=N
 
         if len(points) == 0:
             print(
-                'Copy_trajectories: Trajectory has no survey points:',
+                "Copy_trajectories: Trajectory has no survey points:",
                 src_traj.name,
-                'Wellbore:',
-                src_traj.wellbore.name)
+                "Wellbore:",
+                src_traj.wellbore.name,
+            )
             continue
         if src_type == roxar.SurveyPointCalculationType.survey_points:
             try:
@@ -261,7 +297,9 @@ def copy_trajectories(dst_wellbore, src_wellbore, dst_parent_traj=None, md_min=N
                 dst_traj.survey_point_series.set_survey_points(points)
             except ValueError as e:
                 raise ValueError(e)
-                
-        dst_traj.survey_point_series.interpolation_type = src_traj.survey_point_series.interpolation_type        
+
+        dst_traj.survey_point_series.interpolation_type = (
+            src_traj.survey_point_series.interpolation_type
+        )
 
     return None
