@@ -28,5 +28,5 @@ setuptools.setup(
         "roxar_api_utils.surfaces",
         "roxar_api_utils.wells",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.6",
 )
